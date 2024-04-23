@@ -154,11 +154,11 @@ function composer_manager_packages_page() {
 
     // Get the version that is installed.
     if ($is_installed) {
-      $instaled_version = check_plain($installed[$package_name]['version']);
+      $installed_version = check_plain($installed[$package_name]['version']);
     }
     else {
       $update_needed = TRUE;
-      $instaled_version = t('Not installed');
+      $installed_version = t('Not installed');
     }
 
     // Set the row status.
@@ -176,7 +176,7 @@ function composer_manager_packages_page() {
       'class' => $class,
       'data' => array(
         'package' => $name,
-        'installed' => $instaled_version,
+        'installed' => $installed_version,
         'requirement' => $requirement,
       ),
     );
@@ -349,7 +349,7 @@ function composer_manager_package_dependents() {
   $dependents = array();
 
   $json = composer_manager_installed_packages_load();
-  foreach ($json as $package) {
+  foreach ($json['packages'] as $package) {
     if (!empty($package['require'])) {
       foreach ($package['require'] as $dependent => $version) {
         $dependents[$dependent][] = $package['name'];
