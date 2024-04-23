@@ -13,10 +13,12 @@
  * @ingroup forms
  */
 function composer_manager_settings_form($form, &$form_state) {
+  $config = config('composer_manager.settings');
+  $form['#config'] = 'composer_manager.settings';
   $form['composer_manager_vendor_dir'] = array(
     '#title' => 'Vendor Directory',
     '#type' => 'textfield',
-    '#default_value' => variable_get('composer_manager_vendor_dir', 'sites/all/vendor'),
+    '#default_value' => $config->get('vendor_dir'),
     '#description' => t('The relative or absolute path to the vendor directory containing the Composer packages and autoload.php file.'),
   );
 
@@ -30,14 +32,14 @@ function composer_manager_settings_form($form, &$form_state) {
   $form['composer_manager_autobuild_file'] = array(
     '#title' => 'Automatically build the composer.json file when enabling or disabling modules',
     '#type' => 'checkbox',
-    '#default_value' => variable_get('composer_manager_autobuild_file', 1),
+    '#default_value' => $config->get('autobuild_file'),
     '#description' => t('Automatically build the consolidated composer.json for all contributed modules file in the vendor directory above when modules are enabled or disabled. Disable this setting if you want to maintain the composer.json file manually.'),
   );
 
   $form['composer_manager_autobuild_packages'] = array(
     '#title' => 'Automatically update Composer dependencies when enabling or disabling modules with Drush',
     '#type' => 'checkbox',
-    '#default_value' => variable_get('composer_manager_autobuild_packages', 1),
+    '#default_value' => $config->get('autobuild_packages'),
     '#description' => t('Automatically build the consolidated composer.json file and run Composer\'s <code>!command</code> command when enabling or disabling modules with Drush. Disable this setting to manage the composer.json and dependencies manually.', array('!command' => 'update')),
   );
 
@@ -79,7 +81,7 @@ function composer_manager_packages_page() {
   }
   catch (\RuntimeException $e) {
     $error = TRUE;
-    drupal_set_message(filter_xss_admin($e->getMessage()));
+    backdrop_set_message(filter_xss_admin($e->getMessage()));
     watchdog_exception('composer_manager', $e);
     $combined = array();
   }
@@ -190,21 +192,21 @@ function composer_manager_packages_page() {
     ),
   );
 
-  $build['refresh_form'] = drupal_get_form('composer_manager_rebuild_form');
+  $build['refresh_form'] = backdrop_get_form('composer_manager_rebuild_form');
 
   // Set status messages.
   module_load_install('composer_manager');
   $requirements = module_invoke('composer_manager', 'requirements', 'runtime');
 
   if (REQUIREMENT_OK != $requirements['composer_manager']['severity']) {
-    drupal_set_message($requirements['composer_manager']['description'], 'error');
+    backdrop_set_message($requirements['composer_manager']['description'], 'error');
   }
   elseif ($update_needed) {
-    $args = array('!command' => 'update', '@url' => url('http://drupal.org/project/composer_manager', array('absolute' => TRUE)));
-    drupal_set_message(t('Packages need to be installed or removed by running Composer\'s <code>!command</code> command.<br/>Refer to the instructions on the <a href="@url" target="_blank">Composer Manager project page</a> for updating packages.', $args), 'warning');
+    $args = array('!command' => 'update', '@url' => url('https://backdropcms.org/project/composer_manager', array('absolute' => TRUE)));
+    backdrop_set_message(t('Packages need to be installed or removed by running Composer\'s <code>!command</code> command.<br/>Refer to the instructions on the <a href="@url" target="_blank">Composer Manager project page</a> for updating packages.', $args), 'warning');
   }
   if ($has_conflicts) {
-    drupal_set_message(t('Potentially conflicting versions of the same package are required by different modules.'), 'warning');
+    backdrop_set_message(t('Potentially conflicting versions of the same package are required by different modules.'), 'warning');
   }
 
   return $build;
@@ -255,7 +257,7 @@ function composer_manager_read_composer_file($file_uri) {
     if (!$filedata = @file_get_contents($file_uri)) {
       throw new \RuntimeException(t('Error reading file: @file', array('@file' => $file_uri)));
     }
-    $json = @drupal_json_decode($filedata);
+    $json = @backdrop_json_decode($filedata);
     if ($json === NULL) {
       throw new \RuntimeException(t('Error parsing file: @file', array('@file' => $file_uri)));
     }
@@ -275,7 +277,7 @@ function composer_manager_read_composer_file($file_uri) {
  * @throws \RuntimeException
  */
 function composer_manager_lockfile_load() {
-  $json = &drupal_static(__FUNCTION__);
+  $json = &backdrop_static(__FUNCTION__);
   if ($json === NULL) {
     $dir_uri = composer_manager_file_dir();
     $json = composer_manager_read_composer_file($dir_uri . '/composer.lock');
@@ -292,7 +294,7 @@ function composer_manager_lockfile_load() {
  * @throws \RuntimeException
  */
 function composer_manager_installed_packages_load() {
-  $json = &drupal_static(__FUNCTION__);
+  $json = &backdrop_static(__FUNCTION__);
   if ($json === NULL) {
     $file_uri = composer_manager_vendor_dir() . '/composer/installed.json';
     $json = composer_manager_read_composer_file($file_uri);
@@ -312,12 +314,12 @@ function composer_manager_installed_packages_load() {
  * @throws \RuntimeException
  */
 function composer_manager_installed_packages() {
-  $installed = &drupal_static(__FUNCTION__, NULL);
+  $installed = &backdrop_static(__FUNCTION__, NULL);
   if (NULL === $installed) {
     $installed = array();
 
     $json = composer_manager_installed_packages_load();
-    foreach ($json as $package) {
+    foreach ($json['packages'] as $package) {
       $installed[$package['name']] = array(
         'version' => $package['version'],
         'description' => !empty($package['description']) ? $package['description'] : '',
@@ -361,7 +363,7 @@ function composer_manager_package_dependents() {
  * @return array
  */
 function composer_manager_required_packages() {
-  $required = &drupal_static(__FUNCTION__, NULL);
+  $required = &backdrop_static(__FUNCTION__, NULL);
   if (NULL === $required) {
     require_once __DIR__ . '/composer_manager.writer.inc';
 

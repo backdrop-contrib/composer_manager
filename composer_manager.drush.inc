@@ -40,7 +40,7 @@ function composer_manager_drush_command() {
  */
 function drush_composer_manager($command = 'install') {
   $uri = composer_manager_file_dir(TRUE);
-  if (!$dir = drupal_realpath($uri)) {
+  if (!$dir = backdrop_realpath($uri)) {
     return drush_set_error(dt('Error resolving path: @uri', array('@uri' => $uri)));
   }
 
@@ -146,8 +146,8 @@ function drush_composer_manager_post_pm_disable() {
  * @see drush_composer_manager_post_pm_disable()
  */
 function drush_composer_manager_write_if_changed() {
-  $changed = &drupal_static('composer_manager_write_if_changed', FALSE);
-  if (variable_get('composer_manager_autobuild_packages', 1) && $changed) {
+  $changed = &backdrop_static('composer_manager_write_if_changed', FALSE);
+  if (config_get('composer_manager.settings', 'autobuild_packages') && $changed) {
     drush_print('One or more extensions have dependencies managed by Composer.');
     if (drush_confirm(dt('Update packages managed by Composer?'))) {
       drush_composer_manager('update');

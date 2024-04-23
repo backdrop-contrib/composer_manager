@@ -7,6 +7,17 @@
  */
 
 /**
+ * Implements hook_config_info().
+ */
+function composer_manager_config_info() {
+  $prefixes['composer_manager.settings'] = array(
+    'label' => t('Composer Manager'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Implements hook_boot().
  */
 function composer_manager_boot() {
@@ -14,7 +25,7 @@ function composer_manager_boot() {
     composer_manager_register_autoloader();
   }
   catch (\RuntimeException $e) {
-    if (!drupal_is_cli()) {
+    if (!backdrop_is_cli()) {
       watchdog_exception('composer_manager', $e);
     }
   }
@@ -55,7 +66,7 @@ function composer_manager_menu() {
 
   $items['admin/config/system/composer-manager/settings'] = array(
     'title' => 'Settings',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('composer_manager_settings_form'),
     'access arguments' => array('administer site configuration'),
     'file' => 'composer_manager.admin.inc',
@@ -96,8 +107,8 @@ function composer_manager_modules_disabled($modules) {
  *   The enabled / disabled modules being scanned for a composer.json file.
  */
 function composer_manager_write_if_changed(array $modules) {
-  $changed = &drupal_static(__FUNCTION__, FALSE);
-  if (variable_get('composer_manager_autobuild_file', 1)) {
+  $changed = &backdrop_static(__FUNCTION__, FALSE);
+  if (config_get('composer_manager.settings', 'autobuild_file')) {
     if (composer_manager_packages_have_changed($modules)) {
       $changed = TRUE;
       composer_manager_write_file();
@@ -120,7 +131,7 @@ function composer_manager_packages_have_changed(array $modules) {
   foreach ($modules as $module) {
 
     // Check if the module has a composer.json file.
-    $module_path = drupal_get_path('module', $module);
+    $module_path = backdrop_get_path('module', $module);
     if (file_exists($module_path . '/composer.json')) {
       return TRUE;
     }
@@ -149,7 +160,7 @@ function composer_manager_packages_have_changed(array $modules) {
  */
 function composer_manager_has_composer_file(array $modules) {
   foreach ($modules as $module) {
-    $module_path = drupal_get_path('module', $module);
+    $module_path = backdrop_get_path('module', $module);
     if (file_exists($module_path . '/composer.json')) {
       return TRUE;
     }
@@ -206,7 +217,7 @@ function composer_manager_write_file() {
   catch (\RuntimeException $e) {
     $success = FALSE;
     if (user_access('administer site configuration')) {
-      drupal_set_message(t('Error writing composer.json file'), 'error');
+      backdrop_set_message(t('Error writing composer.json file'), 'error');
     }
     watchdog_exception('composer_manager', $e);
   }
@@ -223,9 +234,9 @@ function composer_manager_write_file() {
 function composer_manager_vendor_dir() {
   // This function is run early in bootstrap, via composer_manager_boot(), so
   // required files need to be included explicitly.
-  require_once DRUPAL_ROOT . '/includes/file.inc';
+  require_once BACKDROP_ROOT . '/core/includes/file.inc';
 
-  $vendor_dir = variable_get('composer_manager_vendor_dir', 'sites/all/vendor');
+  $vendor_dir = config_get('composer_manager.settings', 'vendor_dir');
 
   if (!file_exists($vendor_dir)) {
     require_once __DIR__ . '/composer_manager.writer.inc';
@@ -233,7 +244,7 @@ function composer_manager_vendor_dir() {
   }
 
   // Because this function is run early in bootstrap, use realpath() instead of
-  // drupal_realpath().
+  // backdrop_realpath().
   if (!$realpath = realpath($vendor_dir)) {
     throw new \RuntimeException(t('Error resolving vendor directory: @dir', array('@dir' => $vendor_dir)));
   }
@@ -255,7 +266,7 @@ function composer_manager_lock_file() {
   // Make sure we can read composer.lock and it's valid.
   if (file_exists($lock_file) && is_readable($lock_file)) {
     $json = file_get_contents($lock_file);
-    $decoded = drupal_json_decode($json);
+    $decoded = backdrop_json_decode($json);
     if (!is_array($decoded)) {
       return FALSE;
     }
@@ -279,18 +290,12 @@ function composer_manager_lock_file() {
  */
 function composer_manager_file_dir($ensure_write_permission = FALSE) {
   module_load_include('inc', 'composer_manager', 'composer_manager.writer');
-  $scheme = file_default_scheme();
-  // Composer can only be run on a locally mounted file system. If the scheme is
-  // set to something different like S3, we fall back to the public scheme.
-  if (!in_array($scheme, array('public', 'private'))) {
-    $scheme = 'public';
-  }
 
-  $dir_uri = variable_get('composer_manager_file_dir', $scheme . '://composer');
+  $dir_uri = config_get('composer_manager.settings', 'file_dir');
   if ($ensure_write_permission) {
     composer_manager_prepare_directory($dir_uri);
   }
-  if (!$realpath = drupal_realpath($dir_uri)) {
+  if (!$realpath = backdrop_realpath($dir_uri)) {
     throw new \RuntimeException(t('Error resolving directory: @dir', array('@dir' => $dir_uri)));
   }
   return $realpath;

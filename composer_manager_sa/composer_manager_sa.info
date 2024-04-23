@@ -1,4 +1,9 @@
 name = Composer Manager Security Advisories
 description = Check for known security issues in Composer libraries from FriendsOfPHP/security-advisories.
-core = 7.x
+backdrop = 1.x
+type = module
+
 dependencies[] = composer_manager
+
+tags[] = Composer
+tags[] = Security

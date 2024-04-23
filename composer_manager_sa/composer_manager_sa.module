@@ -54,7 +54,7 @@ function composer_manager_sa_check($lock_file) {
 function composer_manager_sa_plain_text($lock_file, array $vulnerabilities) {
   $formatter = new \SensioLabs\Security\Formatters\TextFormatter(new \Symfony\Component\Console\Helper\FormatterHelper());
   $output = new \Symfony\Component\Console\Output\BufferedOutput();
-  $formatter->displayResults($output, drupal_realpath($lock_file), $vulnerabilities);
+  $formatter->displayResults($output, backdrop_realpath($lock_file), $vulnerabilities);
 
   return $output;
 }
@@ -81,8 +81,8 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
 
   if ($force_refresh || !$vulnerabilities = composer_manager_sa_cache($lock_file)) {
     $checker = new SecurityChecker();
-    $vulnerabilities = &drupal_static('composer_manager_sa_cache');
-    $vulnerabilities = $checker->check(drupal_realpath($lock_file));
+    $vulnerabilities = &backdrop_static('composer_manager_sa_cache');
+    $vulnerabilities = $checker->check(backdrop_realpath($lock_file));
     cache_set(composer_manager_sa_cache_cid($lock_file), $vulnerabilities, 'cache', 3600);
   }
 
@@ -99,7 +99,7 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
  *   The array of cached vulnerabilities, or FALSE if no data is in the cache.
  */
 function composer_manager_sa_cache($lock_file) {
-  $vulnerabilities = &drupal_static(__FUNCTION__);
+  $vulnerabilities = &backdrop_static(__FUNCTION__);
 
   // If there are no vulnerabilities this is an empty array, so we have to use
   // is_array() to check to see if we are cached or not.

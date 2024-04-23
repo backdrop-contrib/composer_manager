@@ -1,7 +1,10 @@
 name = Composer Manager
 description = Provides consolidated management of third-party, Composer-compatible packages that are required by contributed modules.
 package = Other
-core = 7.x
-php = 5.3
+backdrop = 1.x
+type = module
 
 configure = admin/config/system/composer-manager
+
+tags[] = Composer
+tags[] = Dependency Management

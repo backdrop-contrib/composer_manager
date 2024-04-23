@@ -16,6 +16,9 @@ function composer_manager_sa_requirements($phase) {
 
     $lock_file = composer_manager_lock_file();
     $vulnerabilities = composer_manager_sa_cache($lock_file);
+    if (empty($vulnerabilities)) {
+      $vulnerabilities = array();
+    }
     if (is_array($vulnerabilities) && empty($vulnerabilities)) {
       $severity = REQUIREMENT_OK;
       $description = $t('There are no known security issues with Composer libraries.');

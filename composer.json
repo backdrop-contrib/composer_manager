@@ -2,7 +2,7 @@
     "name": "drupal/composer_manager",
     "type": "drupal-module",
     "description": "Composer Manager is a bridge to best-in-breed, standards compliant PHP libraries that are managed by Composer and Packagist.",
-    "homepage": "http://drupal.org/project/composer_manager",
+    "homepage": "https://backdropcms.org/project/composer_manager",
     "license": "GPL-2.0",
     "authors": [
         {
@@ -20,6 +20,6 @@
         "issues": "http://drupal.org/project/issues/composer_manager"
     },
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=5.6.0"
     }
 }

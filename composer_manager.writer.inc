@@ -16,7 +16,7 @@ function composer_manager_fetch_data() {
   $data = array();
   foreach (module_list() as $module) {
 
-    $module_dir = drupal_get_path('module', $module);
+    $module_dir = backdrop_get_path('module', $module);
     $composer_file = $module_dir . '/composer.json';
     $args = array('@file' => $composer_file);
 
@@ -28,7 +28,7 @@ function composer_manager_fetch_data() {
       throw new \RuntimeException(t('Error reading file: @file', $args));
     }
 
-    if (!$json = @drupal_json_decode($filedata)) {
+    if (!$json = @backdrop_json_decode($filedata)) {
       throw new \UnexpectedValueException(t('Expecting contents of file to be valid JSON: @file', $args));
     }
 
@@ -117,10 +117,10 @@ function composer_manager_build_json(array $data) {
       );
 
       // Allow modules to alter JSON map.
-      drupal_alter('composer_json_map', $json_map);
+      backdrop_alter('composer_json_map', $json_map);
 
       // Ensure JSON map has default keys so we don't have to do isset() checks.
-      $json_map = drupal_array_merge_deep($default_map, $json_map);
+      $json_map = backdrop_array_merge_deep($default_map, $json_map);
 
       // Cache JSON map.
       cache_set($cid, $json_map);
@@ -134,35 +134,35 @@ function composer_manager_build_json(array $data) {
       $parents = (array) $parents;
 
       // Retrieve value from the module's JSON and skip if it doesn't exist.
-      $value = drupal_array_get_nested_value($json, $parents, $key_exists);
+      $value = backdrop_array_get_nested_value($json, $parents, $key_exists);
       if (!$key_exists) {
         continue;
       }
 
       // Retrieve the existing data.
-      $existing = drupal_array_get_nested_value($combined, $parents, $key_exists);
+      $existing = backdrop_array_get_nested_value($combined, $parents, $key_exists);
 
       // If existing value is an array, type cast module data and merge it in.
       if (isset($existing) && is_array($existing)) {
-        $value = drupal_array_merge_deep($existing, (array) $value);
+        $value = backdrop_array_merge_deep($existing, (array) $value);
       }
 
       // Set the value.
-      drupal_array_set_nested_value($combined, $parents, $value, TRUE);
+      backdrop_array_set_nested_value($combined, $parents, $value, TRUE);
     }
 
     // Fix property keys and values that contain relative paths.
     foreach ($json_map['relative_paths'] as $type => $data) {
       foreach ($data as $parents) {
         $parents = (array) $parents;
-        $property = &drupal_array_get_nested_value($combined, $parents, $key_exists);
+        $property = &backdrop_array_get_nested_value($combined, $parents, $key_exists);
         if (!$key_exists || !is_array($property)) {
           continue;
         }
         composer_manager_relative_json_property($property, array(
           'keys' => $type === 'keys',
           'paths' => array(
-            DRUPAL_ROOT . '/' . drupal_get_path('module', $module),
+            BACKDROP_ROOT . '/' . backdrop_get_path('module', $module),
           ),
         ));
       }
@@ -177,7 +177,7 @@ function composer_manager_build_json(array $data) {
   }
 
   // Allow extensions to alter the composer JSON.
-  drupal_alter('composer_json', $combined);
+  backdrop_alter('composer_json', $combined);
 
   return $combined;
 }
@@ -198,7 +198,7 @@ function composer_manager_put_file($dir_uri, array $json) {
   composer_manager_prepare_directory($dir_uri, TRUE);
 
   // Make the composer.json file human readable for PHP >= 5.4.
-  // @see drupal_json_encode()
+  // @see backdrop_json_encode()
   // @see http://drupal.org/node/1943608
   // @see http://drupal.org/node/1948012
   $json_options = JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
@@ -217,16 +217,16 @@ function composer_manager_put_file($dir_uri, array $json) {
   // Displays a message to admins that a file was written.
   if (user_access('administer site configuration')) {
     $command = file_exists($dir_uri . '/composer.lock') ? 'update' : 'install';
-    drupal_set_message(t('A composer.json file was written to @path.', array('@path' => drupal_realpath($dir_uri))));
+    backdrop_set_message(t('A composer.json file was written to @path.', array('@path' => backdrop_realpath($dir_uri))));
     if ('admin/config/system/composer-manager' != current_path()) {
-      $args = array('!command' => $command, '@url' => url('http://drupal.org/project/composer_manager', array('absolute' => TRUE)));
+      $args = array('!command' => $command, '@url' => url('https://backdropcms.org/project/composer_manager', array('absolute' => TRUE)));
       if ('install' == $command) {
         $message = t('Composer\'s <code>!command</code> command must be run to generate the autoloader and install the required packages.<br/>Refer to the instructions on the <a href="@url" target="_blank">Composer Manager project page</a> for installing packages.', $args);
       }
       else {
         $message = t('Composer\'s <code>!command</code> command must be run to install the required packages.<br/>Refer to the instructions on the <a href="@url" target="_blank">Composer Manager project page</a> for updating packages.', $args);
       }
-      drupal_set_message($message, 'warning');
+      backdrop_set_message($message, 'warning');
     }
   }
 }
@@ -311,9 +311,9 @@ function composer_manager_relative_json_property(&$value, array $options = array
     $vendor_dir = composer_manager_relative_dir(composer_manager_vendor_dir(), $composer_dir);
   }
 
-  static $drupal_root;
-  if (!isset($drupal_root)) {
-    $drupal_root = composer_manager_relative_dir(DRUPAL_ROOT, $composer_dir);
+  static $backdrop_root;
+  if (!isset($backdrop_root)) {
+    $backdrop_root = composer_manager_relative_dir(BACKDROP_ROOT, $composer_dir);
   }
 
   $options += array(
@@ -356,16 +356,16 @@ function composer_manager_relative_json_property(&$value, array $options = array
     return;
   }
 
-  // Allow and replace a DRUPAL_ROOT constant.
-  if (strpos($value, 'DRUPAL_ROOT') === 0) {
-    $value = preg_replace('/\/+/', '/', str_replace('DRUPAL_ROOT', "$drupal_root/", $value));
+  // Allow and replace a BACKDROP_ROOT constant.
+  if (strpos($value, 'BACKDROP_ROOT') === 0) {
+    $value = preg_replace('/\/+/', '/', str_replace('BACKDROP_ROOT', "$backdrop_root/", $value));
     return;
   }
 
   // Attempt to retrieve an absolute path using the prefixed path and the value.
   $absolute = FALSE;
   foreach ($options['paths'] as $path) {
-    $absolute = drupal_realpath("$path/$value");
+    $absolute = backdrop_realpath("$path/$value");
     if ($absolute) {
       break;
     }
@@ -373,7 +373,7 @@ function composer_manager_relative_json_property(&$value, array $options = array
 
   // If there still is no valid "to", attempt with just using the value.
   if (!$absolute) {
-    $absolute = drupal_realpath($value);
+    $absolute = backdrop_realpath($value);
   }
 
   // If an absolute path was ascertained, change value to a relative path.
@@ -391,7 +391,7 @@ function composer_manager_relative_json_property(&$value, array $options = array
 function composer_manager_relative_autoload_path(&$path, $key, $module) {
   composer_manager_relative_json_property($path, array(
     'paths' => array(
-      DRUPAL_ROOT . '/' . drupal_get_path('module', $module),
+      BACKDROP_ROOT . '/' . backdrop_get_path('module', $module),
     ),
     'recurse' => FALSE,
   ));

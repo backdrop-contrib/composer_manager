@@ -1,0 +1,7 @@
+{
+  "_config_name": "composer_manager.settings",
+  "vendor_dir": "vendor",
+  "autobuild_file": 1,
+  "file_dir": "public://composer",
+  "autobuild_packages": 1
+}

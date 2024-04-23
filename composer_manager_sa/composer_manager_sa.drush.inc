@@ -32,7 +32,7 @@ function drush_composer_manager_sa_check() {
  */
 function composer_manager_sa_print() {
   if (!$lock_file = composer_manager_lock_file()) {
-    drupal_set_message(t('The composer.lock file is missing or not readable. Skipping security advisory checks.'), 'warning');
+    backdrop_set_message(t('The composer.lock file is missing or not readable. Skipping security advisory checks.'), 'warning');
     return;
   }
 

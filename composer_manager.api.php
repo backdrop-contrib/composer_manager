@@ -28,17 +28,17 @@ function hook_composer_json_alter(&$json) {
  *   - 'properties': (string[]|array[]) An indexed array of whitelisted
  *     property strings to be merged into the compiled Composer JSON file. If
  *     the specified property is an array, it will be treated a "parents" array
- *     to retrieve a nested value, see drupal_array_get_nested_value().
+ *     to retrieve a nested value, see backdrop_array_get_nested_value().
  *   - 'relative_paths': (array) An associative array of key/value pairs,
  *     containing:
  *     - 'keys': (string[]|array[]) An indexed array of property strings that
  *       will be iterated over to transform its keys into relative paths. If
  *       the specified property is an array, it will be treated a "parents"
- *       array to retrieve a nested value, see drupal_array_get_nested_value().
+ *       array to retrieve a nested value, see backdrop_array_get_nested_value().
  *     - 'values': (string[]|array[]) An indexed array of property strings that
  *       will be iterated over to transform its values into relative paths. If
  *       the specified property is an array, it will be treated a "parents"
- *       array to retrieve a nested value, see drupal_array_get_nested_value().
+ *       array to retrieve a nested value, see backdrop_array_get_nested_value().
  *
  * @see composer_manager_build_json()
  */

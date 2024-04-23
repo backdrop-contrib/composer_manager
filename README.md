@@ -1,20 +1,20 @@
 # Composer Manager
 
-[Composer Manager](https://drupal.org/project/composer_manager) provides a
-gateway to the larger PHP community by enabling [Drupal](http://drupal.org)
-modules to more easily use best-in-breed libraries that are managed by
+[Composer Manager](https://backdropcms.org/project/composer_manager) provides a
+gateway to the larger PHP community by enabling Backdrop modules to more easily
+use best-in-breed libraries that are managed by
 [Composer](https://getcomposer.org/).
 
 There are [many challenges](#why-cant-you-just--) when using Composer with
-Drupal, so the primary goal of this module is to work around them by wrapping
-Composer with common Drupal workflows so that module developers and site
+Backdrop, so the primary goal of this module is to work around them by wrapping
+Composer with common Backdrop workflows so that module developers and site
 builders can use the [thousands of standards-compliant, platform agnostic PHP
 libraries](https://packagist.org/statistics) with as little friction as
 possible.
 
 ## Installation
 
-* Follow the standard [Drupal module installation](https://drupal.org/documentation/install/modules-themes)
+* Follow the standard [Backdrop module installation](https://docs.backdropcms.org/documentation/extend-with-modules)
   process
 * Refer to the [Maintaining Dependencies](#maintaining-dependencies)
   section for installing and updating third-party libraries required by
@@ -69,8 +69,7 @@ details on how Composer works.
 
 ### Configuring Composer Manager
 
-Visit `admin/config/system/composer-manager/settings` for Drupal 7 & 8 or
-`admin/settings/composer-manager/settings` for Drupal 6 as a user with the
+Visit `admin/config/system/composer-manager/settings` as a user with the
 `administer site configuration` permission to configure Composer Manager.
 
 ### Best Practices
@@ -92,15 +91,6 @@ modifying the following options in Composer Manager's settings page.
 You can also set the options in settings.php by adding the following variables:
 
 ```php
-// Drupal 6 & 7
-
-$conf['composer_manager_vendor_dir'] = '../vendor';
-$conf['composer_manager_file_dir'] = '../';
-```
-
-```php
-// Drupal 8
-
 $config['composer_manager.settings']['vendor_dir'] = '../vendor';
 $config['composer_manager.settings']['file_dir'] = '../';
 ```
@@ -118,17 +108,6 @@ can differ between sites. Add the following snippet to `settings.php` to group
 the libraries by site in a directory outside of the document root:
 
 ```php
-// Drupal 6 & 7
-
-// Capture the site dir, e.g. "default", "example.localhost", etc.
-$site_dir = basename(__DIR__);
-$conf['composer_manager_vendor_dir'] = '../lib/' . $site_dir . '/vendor';
-$conf['composer_manager_file_dir'] = '../lib/' . $site_dir;
-```
-
-```php
-// Drupal 8
-
 // Capture the site dir, e.g. "default", "example.localhost", etc.
 $site_dir = basename(__DIR__);
 $config['composer_manager.settings']['vendor_dir'] = '../lib/' . $site_dir . '/vendor';
@@ -136,7 +115,7 @@ $config['composer_manager.settings']['file_dir'] = '../lib/' . $site_dir;
 ```
 
 *NOTE:* The `sites/*/` directories may seem like an obvious location for the
-libraries, however Drupal removes write permissions to these directories on
+libraries, however Backdrop removes write permissions to these directories on
 every page load which can cause frustration.
 
 #### Production Environments
@@ -151,18 +130,6 @@ environment variable, adding the following snippet to `settings.php` will
 disable the options where appropriate:
 
 ```php
-// Drupal 6 & 7
-
-// Modify the logic according to your environment.
-if (getenv('APP_ENV') == 'prod') {
-  $conf['composer_manager_autobuild_file'] = 0;
-  $conf['composer_manager_autobuild_packages'] = 0;
-}
-```
-
-```php
-// Drupal 8
-
 // Modify the logic according to your environment.
 if (getenv('APP_ENV') == 'prod') {
   $config['composer_manager.settings']['autobuild_file'] = 0;
@@ -183,25 +150,6 @@ wherever possible to mitigate dependency conflicts.
 
 You can also implement `hook_composer_json_alter(&$json)` to modify the data
 used to build the consolidated `composer.json` file before it is written.
-
-### Requiring Full Symfony, Zend Framework Packages(D8 Only)
-
-If your module requires or has a dependency on `symfony/symfony` or
-`zendframework/zendframework` you need to take one of the
-following actions to avoid duplicate code and potential version mismatches:
-
-* Depend on the `symfony_dependency` or `zendframework_dependency` modules as
-  appropriate
-* Implement `hook_composer_json_alter()` and perform the same modifications as
-  the appropriate "*_dependency" module
-
-A detailed description of why these actions are necessary can be found at
-https://drupal.org/comment/8528371#comment-8528371. The discussion afterwards
-provides the barriers and rationale that guided the current solution.
-
-*NOTE:* You ONLY have to take the actions above when requiring the full Symfony
-or Zend Framework packages and NOT when requiring their components e.g.
-`symfony/filesystem`.
 
 ### Maintaining A Soft Dependency On Composer Manager
 
@@ -284,11 +232,6 @@ different version of the same package, e.g. `"guzzle/http": "3.7.*"` and
 Composer Manager will also flag the potential version conflict in the UI so the
 site builder is aware of the inconsistency.
 
-The story at https://drupal.org/node/1931200 aims to provide manual resolution
-via the UI, and in the future projects such as
-https://github.com/dflydev/dflydev-embedded-composer might provide a better
-solution to eliminate the need for a merging strategy in Composer Manager.
-
 ### Why can't you just manually maintain a composer.json file?
 
 Manually maintaining a `composer.json` file provides a single library space that
@@ -308,15 +251,6 @@ Furthermore, using a Drush based workflow will automatically run the appropriate
 composer commands whenever modules are enabled or disabled, so the need to run
 Composer commands outside of normal workflows is reduced to module updates.
 
-For Drupal 8, Composer Manager also prevents the packages included in Drupal
-core from being installed in the contributed vendor directory. It also ensures
-that the dependencies are compatible with the versions included in Drupal core.
-For example, if a module requires `"guzzle/service": "~3.0"`, version 3.7.1 will
-be installed which is the version of the Guzzle components in core that
-`guzzle/service` depends on.
-
-@todo Provide technical details, reference https://drupal.org/node/2128353
-
 #### Challenges With Composer Manager
 
 There are multiple challenges posed by Composer Manager's technique:
@@ -326,18 +260,6 @@ There are multiple challenges posed by Composer Manager's technique:
   configurations
 * Must implement `hook_composer_json_alter()` in a module to modify
   `composer.json`
-
-### Why can't you just modify Drupal core's composer.json file (D8 Only)?
-
-Modifying Drupal core's `composer.json` file provides a single library space and
-uses the autoloader that is registered in index.php. Relying on this technique
-poses multiple challenges:
-
-* Difficult to manage Drupal upgrades that have package updates
-* Site builder responsible for updating file when modules are enabled or updated
-* Dependencies are decoupled from the module's codebase
-* Challenging in multisite environments where different packages / version are
-  required
 
 #### Composer Manager's Solution
 
