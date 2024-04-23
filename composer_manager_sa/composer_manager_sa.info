@@ -1,7 +1,9 @@
 name = Composer Manager Security Advisories
 description = Check for known security issues in Composer libraries from FriendsOfPHP/security-advisories.
+package = Other
 backdrop = 1.x
 type = module
+php = 8.2
 
 dependencies[] = composer_manager
 

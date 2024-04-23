@@ -78,6 +78,7 @@ function composer_manager_packages_page() {
     $installed = composer_manager_installed_packages();
     $dependents = composer_manager_package_dependents();
     $combined = array_unique(array_merge(array_keys($required), array_keys($installed)));
+    $vulnerabilities = (module_exists('composer_manager_sa')) ? composer_manager_sa_check(composer_manager_lock_file()) : array();
   }
   catch (\RuntimeException $e) {
     $error = TRUE;
@@ -207,6 +208,9 @@ function composer_manager_packages_page() {
   }
   if ($has_conflicts) {
     backdrop_set_message(t('Potentially conflicting versions of the same package are required by different modules.'), 'warning');
+  }
+  if (!empty($vulnerabilities)) {
+    backdrop_set_message(t('Security advisories have been published for some of the packages managed by Composer.' . $vulnerabilities), 'error');
   }
 
   return $build;

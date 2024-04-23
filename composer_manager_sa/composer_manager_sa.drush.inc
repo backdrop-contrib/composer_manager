@@ -39,5 +39,5 @@ function composer_manager_sa_print() {
   $output = composer_manager_sa_check($lock_file);
 
   // This hook is only called from the context of a Drush command.
-  drush_print($output->fetch());
+  drush_print($output);
 }

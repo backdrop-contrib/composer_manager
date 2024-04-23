@@ -5,7 +5,7 @@
  * Check for known security issues in Composer libraries.
  */
 
-use SensioLabs\Security\SecurityChecker;
+use Enlightn\SecurityChecker\SecurityChecker;
 
 /**
  * Implements hook_composer_dependencies_install().
@@ -31,32 +31,38 @@ function composer_manager_sa_cron() {
  * @param string $lock_file
  *   The URI to the composer.lock file.
  *
- * @return \Symfony\Component\Console\Output\BufferedOutput
- *   The security advisory report. This will also contain a result if no issues
- *   are found.
+ * @return string
+ *   The formatted security advisory report. This will also contain a result if
+ *   no issues are found.
  */
 function composer_manager_sa_check($lock_file) {
   $vulnerabilities = composer_manager_sa_vulnerabilities($lock_file);
-  return composer_manager_sa_plain_text($lock_file, $vulnerabilities);
+  return composer_manager_sa_formatted($lock_file, $vulnerabilities);
 }
 
 /**
- * Generate a plain text report for an array of vulnerabilities.
+ * Generate an HTML-formatted report for an array of vulnerabilities.
  *
  * @param string $lock_file
  *   The URI to the composer.lock file.
  * @param array $vulnerabilities
  *   An array of security vulnerabilities.
  *
- * @return \Symfony\Component\Console\Output\BufferedOutput
- *   Buffered output of the plain text report.
+ * @return string
+ *   Formatted output of the report, or an empty string.
  */
-function composer_manager_sa_plain_text($lock_file, array $vulnerabilities) {
-  $formatter = new \SensioLabs\Security\Formatters\TextFormatter(new \Symfony\Component\Console\Helper\FormatterHelper());
-  $output = new \Symfony\Component\Console\Output\BufferedOutput();
-  $formatter->displayResults($output, backdrop_realpath($lock_file), $vulnerabilities);
+function composer_manager_sa_formatted($lock_file, array $vulnerabilities) {
+  $output = '';
+  foreach ($vulnerabilities as $library => $vulnerability) {
+    $output .= '<li><code>' . $library . '</code>: ';
+    foreach ($vulnerability['advisories'] as $advisory) {
+      $output .= l($advisory['cve'], $advisory['link'], array('attributes' => array('target' => '_blank')));
+      $output .= ' (' . $advisory['title'] . ') ';
+    }
+    $output .= '</li>';
+  }
 
-  return $output;
+  return (!empty($output)) ? '<ul>' . $output . '</ul>' : '';
 }
 
 /**

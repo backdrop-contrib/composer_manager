@@ -16,9 +16,6 @@ function composer_manager_sa_requirements($phase) {
 
     $lock_file = composer_manager_lock_file();
     $vulnerabilities = composer_manager_sa_cache($lock_file);
-    if (empty($vulnerabilities)) {
-      $vulnerabilities = array();
-    }
     if (is_array($vulnerabilities) && empty($vulnerabilities)) {
       $severity = REQUIREMENT_OK;
       $description = $t('There are no known security issues with Composer libraries.');
@@ -29,13 +26,13 @@ function composer_manager_sa_requirements($phase) {
     }
     else {
       $severity = REQUIREMENT_ERROR;
-      $formatted = composer_manager_sa_plain_text($lock_file, $vulnerabilities);
-      $description = '<pre>' . check_plain($formatted->fetch()) . '</pre>';
+      $formatted = composer_manager_sa_formatted($lock_file, $vulnerabilities);
+      $description = filter_xss($formatted);
     }
-
+    $vulnerability_count = (is_array($vulnerabilities)) ? count($vulnerabilities) : 0;
     $requirements['composer_manager_security_advisories'] = array(
       'title' => $t('Composer library security updates'),
-      'value' => format_plural(count($vulnerabilities), '@count security advisory.', '@count security advisories.'),
+      'value' => format_plural($vulnerability_count, '@count security advisory.', '@count security advisories.'),
       'description' => $description,
       'severity' => $severity,
     );
