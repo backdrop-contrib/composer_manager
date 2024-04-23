@@ -14,8 +14,7 @@ possible.
 
 ## Installation
 
-* Follow the standard [Backdrop module installation](https://docs.backdropcms.org/documentation/extend-with-modules)
-  process
+* Install this module using the [official Backdrop CMS instructions](https://backdropcms.org/guide/modules)
 * Refer to the [Maintaining Dependencies](#maintaining-dependencies)
   section for installing and updating third-party libraries required by
   contributed modules
@@ -270,3 +269,23 @@ section.
 
 Refer to the [Why can't you just manually maintain a composer.json file?](#challenges-with-composer-manager-1)
 section.
+
+## Current Maintainers
+
+ - [Laryn Kragt Bakker](https://github.com/laryn).
+ - Collaboration and co-maintainers welcome!
+
+## Credits
+
+ - Ported to Backdrop CMS by [Laryn Kragt Bakker](https://github.com/laryn).
+ - Support has been provided by [Aten Design Group](https://aten.io).
+ - Maintained for Drupal by [Bojan Živanović](https://www.drupal.org/u/bojanz),
+   [Chris Pliakas](https://www.drupal.org/u/cpliakas),
+   [Andrew Berry](https://www.drupal.org/u/deviantintegral),
+   [Nathaniel Hoag](https://www.drupal.org/u/n8nl), and
+   [Richard Burford](https://www.drupal.org/u/psynaptic).
+
+ ## License
+
+This project is GPL v2 software. See the LICENSE.txt file in this directory for
+complete text.
