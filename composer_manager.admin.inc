@@ -15,28 +15,28 @@
 function composer_manager_settings_form($form, &$form_state) {
   $config = config('composer_manager.settings');
   $form['#config'] = 'composer_manager.settings';
-  $form['composer_manager_vendor_dir'] = array(
+  $form['vendor_dir'] = array(
     '#title' => 'Vendor Directory',
     '#type' => 'textfield',
     '#default_value' => $config->get('vendor_dir'),
     '#description' => t('The relative or absolute path to the vendor directory containing the Composer packages and autoload.php file.'),
   );
 
-  $form['composer_manager_file_dir'] = array(
+  $form['file_dir'] = array(
     '#title' => 'Composer File Directory',
     '#type' => 'textfield',
     '#default_value' => composer_manager_file_dir(),
     '#description' => t('The directory containing the composer.json file and where Composer commands are run.'),
   );
 
-  $form['composer_manager_autobuild_file'] = array(
+  $form['autobuild_file'] = array(
     '#title' => 'Automatically build the composer.json file when enabling or disabling modules',
     '#type' => 'checkbox',
     '#default_value' => $config->get('autobuild_file'),
     '#description' => t('Automatically build the consolidated composer.json for all contributed modules file in the vendor directory above when modules are enabled or disabled. Disable this setting if you want to maintain the composer.json file manually.'),
   );
 
-  $form['composer_manager_autobuild_packages'] = array(
+  $form['autobuild_packages'] = array(
     '#title' => 'Automatically update Composer dependencies when enabling or disabling modules with Drush',
     '#type' => 'checkbox',
     '#default_value' => $config->get('autobuild_packages'),
@@ -54,9 +54,9 @@ function composer_manager_settings_form($form, &$form_state) {
 function composer_manager_settings_form_validate($form, &$form_state) {
   module_load_include('inc', 'composer_manager', 'composer_manager.writer');
   $autobuild_file = $form_state['values']['composer_manager_autobuild_file'];
-  $file_dir = $form_state['values']['composer_manager_file_dir'];
+  $file_dir = $form_state['values']['file_dir'];
   if ($autobuild_file && !composer_manager_prepare_directory($file_dir, TRUE)) {
-    form_set_error('composer_manager_file_dir', t('Composer file directory must be writable'));
+    form_set_error('file_dir', t('Composer file directory must be writable'));
   }
 }
 
