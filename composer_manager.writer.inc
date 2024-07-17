@@ -247,7 +247,7 @@ function composer_manager_prepare_directory($directory, $for_write = FALSE) {
     return FALSE;
   }
   if (0 === strpos($directory, 'public://')) {
-    file_create_htaccess($directory, TRUE);
+    file_save_htaccess($directory, TRUE);
   }
   return TRUE;
 }

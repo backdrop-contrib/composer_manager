@@ -292,7 +292,7 @@ function composer_manager_file_dir($ensure_write_permission = FALSE) {
   module_load_include('inc', 'composer_manager', 'composer_manager.writer');
 
   $dir_uri = config_get('composer_manager.settings', 'file_dir');
-  if ($ensure_write_permission) {
+  if ($ensure_write_permission || !backdrop_realpath($dir_uri)) {
     composer_manager_prepare_directory($dir_uri);
   }
   if (!$realpath = backdrop_realpath($dir_uri)) {
