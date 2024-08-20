@@ -69,6 +69,7 @@ function composer_manager_packages_page() {
 
   $header = array(
     'package' => t('Package'),
+    'description' => t('Description'),
     'version' => t('Installed Version'),
     'requirement' => t('Version Required by Module'),
   );
@@ -94,6 +95,8 @@ function composer_manager_packages_page() {
 
   $rows = array();
   foreach ($combined as $package_name) {
+    $requirement_level = 'direct';
+    $requirement = NULL;
     $is_installed = isset($installed[$package_name]);
 
     // If the package is installed but has no dependents and is not required by
@@ -110,7 +113,7 @@ function composer_manager_packages_page() {
       $name = check_plain($package_name);
     }
     if ($is_installed && !empty($installed[$package_name]['description'])) {
-      $name .= '<div class="description">' . check_plain($installed[$package_name]['description']) . '</div>';
+      $description = '<div class="description">' . check_plain($installed[$package_name]['description']) . '</div>';
     }
 
     // Get the version required by the module.
@@ -148,8 +151,8 @@ function composer_manager_packages_page() {
       // This package is a dependency of a package directly required by a
       // module. Therefore we cannot detect the required version without using
       // the Composer tool which is expensive and too slow for the web.
-      $requirement = t('N/A');
-      $requirement .= '<div class="description">' . t('Dependency for other packages') . '</div>';
+      // We'll note that this is an indirect requirement.
+      $requirement_level = "indirect";
     }
 
     // Get the version that is installed.
@@ -172,22 +175,35 @@ function composer_manager_packages_page() {
       $class = array('ok');
     }
 
-    $rows[$package_name] = array(
+    $rows[$requirement_level][$package_name] = array(
       'class' => $class,
       'data' => array(
         'package' => $name,
+        'description' => $description,
         'installed' => $installed_version,
-        'requirement' => $requirement,
       ),
     );
+    if (!empty($requirement)) {
+      $rows[$requirement_level][$package_name]['data']['requirement'] = $requirement;
+    }
   }
 
   ksort($rows);
-  $build['packages'] = array(
+  $build['direct_packages'] = array(
     '#theme' => 'table',
     '#header' => $header,
-    '#rows' => $rows,
-    '#caption' => t('Status of Packages Managed by Composer'),
+    '#rows' => $rows['direct'],
+    '#caption' => t('Primary packages managed by Composer'),
+    '#attributes' => array(
+      'class' => array('system-status-report'),
+    ),
+  );
+  unset($header['requirement']);
+  $build['indirect_packages'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows['indirect'],
+    '#caption' => t('Dependencies of primary packages'),
     '#attributes' => array(
       'class' => array('system-status-report'),
     ),
