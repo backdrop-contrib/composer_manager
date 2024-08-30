@@ -6,6 +6,16 @@
  */
 
 /**
+ * Implements hook_install().
+ */
+function composer_manager_install() {
+  $config = config('composer_manager.settings');
+  $config->set('vendor_dir', backdrop_realpath($config->get('vendor_dir')));
+  $config->set('composer_dir', backdrop_realpath($config->get('composer_dir')));
+  $config->save();
+}
+
+/**
  * Implements hook_enable().
  */
 function composer_manager_enable() {

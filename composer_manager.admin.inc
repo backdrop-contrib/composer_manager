@@ -65,6 +65,8 @@ function composer_manager_settings_form_validate($form, &$form_state) {
  */
 function composer_manager_packages_page() {
   $build = array();
+  $build['refresh_form'] = backdrop_get_form('composer_manager_rebuild_form');
+
   $error = FALSE;
 
   $header = array(
@@ -209,8 +211,6 @@ function composer_manager_packages_page() {
     ),
   );
 
-  $build['refresh_form'] = backdrop_get_form('composer_manager_rebuild_form');
-
   // Set status messages.
   module_load_install('composer_manager');
   $requirements = module_invoke('composer_manager', 'requirements', 'runtime');
@@ -240,7 +240,7 @@ function composer_manager_packages_page() {
  * @ingroup forms
  */
 function composer_manager_rebuild_form($form, &$form_state) {
-  $file_dir = composer_manager_file_dir();
+  $file_dir = composer_manager_file_dir(TRUE);
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -249,6 +249,7 @@ function composer_manager_rebuild_form($form, &$form_state) {
   );
 
   $form['#submit'] = array('composer_manager_rebuild_form_submit');
+  $form['#attached']['css'][] = backdrop_get_path('module', 'composer_manager') . '/css/composer_manager.admin.css';
 
   return $form;
 }
