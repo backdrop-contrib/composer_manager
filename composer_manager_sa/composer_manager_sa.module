@@ -85,7 +85,7 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
   // update the Composer autoloader may not be registered.
   composer_manager_register_autoloader();
 
-  if ($force_refresh || !$vulnerabilities = composer_manager_sa_cache($lock_file)) {
+  if ($force_refresh || (!empty($lock_file) && !$vulnerabilities = composer_manager_sa_cache($lock_file))) {
     $checker = new SecurityChecker();
     $vulnerabilities = &backdrop_static('composer_manager_sa_cache');
     $vulnerabilities = $checker->check(backdrop_realpath($lock_file));
@@ -113,6 +113,9 @@ function composer_manager_sa_cache($lock_file) {
     return $vulnerabilities;
   }
 
+  if (empty($lock_file)) {
+    return FALSE;
+  }
   $cid = composer_manager_sa_cache_cid($lock_file);
   if ($cached = cache_get($cid)) {
     $vulnerabilities = $cached->data;
@@ -128,9 +131,12 @@ function composer_manager_sa_cache($lock_file) {
  *   The URI to the composer.lock file.
  *
  * @return string
- *   The cache ID.
+ *   The cache ID, or an empty string if the lock file does not exist.
  */
 function composer_manager_sa_cache_cid($lock_file) {
+  if (!file_exists($lock_file)) {
+    return '';
+  }
   $cid = md5(file_get_contents($lock_file));
   return $cid;
 }

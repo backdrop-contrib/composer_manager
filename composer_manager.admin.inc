@@ -194,7 +194,7 @@ function composer_manager_packages_page() {
   $build['direct_packages'] = array(
     '#theme' => 'table',
     '#header' => $header,
-    '#rows' => $rows['direct'],
+    '#rows' => $rows['direct'] ?? [],
     '#caption' => t('Primary packages managed by Composer'),
     '#attributes' => array(
       'class' => array('system-status-report'),
@@ -204,7 +204,7 @@ function composer_manager_packages_page() {
   $build['indirect_packages'] = array(
     '#theme' => 'table',
     '#header' => $header,
-    '#rows' => $rows['indirect'],
+    '#rows' => $rows['indirect'] ?? [],
     '#caption' => t('Dependencies of primary packages'),
     '#attributes' => array(
       'class' => array('system-status-report'),
@@ -273,7 +273,6 @@ function composer_manager_rebuild_form_submit($form, &$form_state) {
  * @throws \RuntimeException
  */
 function composer_manager_read_composer_file($file_uri) {
-  $json = array();
   if (file_exists($file_uri)) {
     if (!$filedata = @file_get_contents($file_uri)) {
       throw new \RuntimeException(t('Error reading file: @file', array('@file' => $file_uri)));
@@ -282,11 +281,8 @@ function composer_manager_read_composer_file($file_uri) {
     if ($json === NULL) {
       throw new \RuntimeException(t('Error parsing file: @file', array('@file' => $file_uri)));
     }
-    elseif ($json === FALSE) {
-      $json = array();
-    }
   }
-  return $json;
+  return $json ?? ['packages' => []];
 }
 
 /**
