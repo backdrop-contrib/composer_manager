@@ -274,7 +274,6 @@ function composer_manager_rebuild_form_submit($form, &$form_state) {
  * @throws \RuntimeException
  */
 function composer_manager_read_composer_file($file_uri) {
-  $json = array();
   if (file_exists($file_uri)) {
     if (!$filedata = @file_get_contents($file_uri)) {
       throw new \RuntimeException(t('Error reading file: @file', array('@file' => $file_uri)));
@@ -283,11 +282,8 @@ function composer_manager_read_composer_file($file_uri) {
     if ($json === NULL) {
       throw new \RuntimeException(t('Error parsing file: @file', array('@file' => $file_uri)));
     }
-    elseif ($json === FALSE) {
-      $json = array();
-    }
   }
-  return $json;
+  return $json ?? ['packages' => []];
 }
 
 /**
