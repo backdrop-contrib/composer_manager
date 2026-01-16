@@ -128,9 +128,9 @@ function composer_manager_sa_cache($lock_file) {
  *   The URI to the composer.lock file.
  *
  * @return string
- *   The cache ID.
+ *   The cache ID, or an empty string if the lock file is empty.
  */
-function composer_manager_sa_cache_cid($lock_file) {
-  $cid = md5(file_get_contents($lock_file));
+function composer_manager_sa_cache_cid(string $lock_file = '') {
+  $cid = (!empty($lock_file)) ? md5(file_get_contents($lock_file)) : '';
   return $cid;
 }

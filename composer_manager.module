@@ -245,7 +245,7 @@ function composer_manager_vendor_dir() {
 
   // Because this function is run early in bootstrap, use realpath() instead of
   // backdrop_realpath().
-  if (!$realpath = realpath($vendor_dir)) {
+  if (empty($vendor_dir) || !$realpath = realpath($vendor_dir)) {
     throw new \RuntimeException(t('Error resolving vendor directory: @dir', array('@dir' => $vendor_dir)));
   }
 
@@ -295,7 +295,7 @@ function composer_manager_file_dir($ensure_write_permission = FALSE) {
   if ($ensure_write_permission || !backdrop_realpath($dir_uri)) {
     composer_manager_prepare_directory($dir_uri);
   }
-  if (!$realpath = backdrop_realpath($dir_uri)) {
+  if (empty($dir_uri) || !$realpath = backdrop_realpath($dir_uri)) {
     throw new \RuntimeException(t('Error resolving directory: @dir', array('@dir' => $dir_uri)));
   }
   return $realpath;

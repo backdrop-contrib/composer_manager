@@ -40,7 +40,7 @@ function composer_manager_drush_command() {
  */
 function drush_composer_manager($command = 'install') {
   $uri = composer_manager_file_dir(TRUE);
-  if (!$dir = backdrop_realpath($uri)) {
+  if (empty($uri) || !$dir = backdrop_realpath($uri)) {
     return drush_set_error(dt('Error resolving path: @uri', array('@uri' => $uri)));
   }
 
@@ -80,7 +80,7 @@ function drush_composer_manager($command = 'install') {
   $drush_arguments = drush_get_arguments();
   if ($drush_arguments && $drush_arguments[0] === 'composer-manager') {
     $arguments = $drush_arguments;
-    array_shift($arguments); // exclude drush main command, composer-manager
+    array_shift($arguments); // Exclude drush main command, composer-manager.
     $arguments[] = '--working-dir=' . escapeshellcmd($dir);
   }
   else {

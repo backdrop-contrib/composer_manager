@@ -53,7 +53,7 @@ function composer_manager_settings_form($form, &$form_state) {
  */
 function composer_manager_settings_form_validate($form, &$form_state) {
   module_load_include('inc', 'composer_manager', 'composer_manager.writer');
-  $autobuild_file = $form_state['values']['composer_manager_autobuild_file'];
+  $autobuild_file = $form_state['values']['autobuild_file'];
   $file_dir = $form_state['values']['file_dir'];
   if ($autobuild_file && !composer_manager_prepare_directory($file_dir, TRUE)) {
     form_set_error('file_dir', t('Composer file directory must be writable'));
@@ -97,6 +97,7 @@ function composer_manager_packages_page() {
 
   $rows = array();
   foreach ($combined as $package_name) {
+    $description = '';
     $requirement_level = 'direct';
     $requirement = NULL;
     $is_installed = isset($installed[$package_name]);
@@ -194,7 +195,7 @@ function composer_manager_packages_page() {
   $build['direct_packages'] = array(
     '#theme' => 'table',
     '#header' => $header,
-    '#rows' => $rows['direct'],
+    '#rows' => $rows['direct'] ?? [],
     '#caption' => t('Primary packages managed by Composer'),
     '#attributes' => array(
       'class' => array('system-status-report'),
@@ -204,7 +205,7 @@ function composer_manager_packages_page() {
   $build['indirect_packages'] = array(
     '#theme' => 'table',
     '#header' => $header,
-    '#rows' => $rows['indirect'],
+    '#rows' => $rows['indirect'] ?? [],
     '#caption' => t('Dependencies of primary packages'),
     '#attributes' => array(
       'class' => array('system-status-report'),
@@ -340,6 +341,9 @@ function composer_manager_installed_packages() {
     $installed = array();
 
     $json = composer_manager_installed_packages_load();
+    if (empty($json['packages'])) {
+      return $installed;
+    }
     foreach ($json['packages'] as $package) {
       $installed[$package['name']] = array(
         'version' => $package['version'],
@@ -347,7 +351,6 @@ function composer_manager_installed_packages() {
         'homepage' => !empty($package['homepage']) ? $package['homepage'] : '',
       );
     }
-
     ksort($installed);
   }
 
@@ -366,6 +369,9 @@ function composer_manager_package_dependents() {
   $dependents = array();
 
   $json = composer_manager_installed_packages_load();
+  if (empty($json['packages'])) {
+    return $dependents;
+  }
   foreach ($json['packages'] as $package) {
     if (!empty($package['require'])) {
       foreach ($package['require'] as $dependent => $version) {
