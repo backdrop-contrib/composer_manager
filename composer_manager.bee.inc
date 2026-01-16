@@ -84,7 +84,7 @@ function bee_composer_manager_execute($arguments = array(), $options = array()) 
 
   // Build the shell command. Pass-through additional args is not yet supported
   // here for simplicity; minimal implementation as requested.
-  $cmd_parts = array('composer', $subcommand, '--working-dir=' . escapeshellcmd($dir));
+  $cmd_parts = array('composer', $subcommand, '--working-dir=' . escapeshellarg($dir));
   $cmd = implode(' ', $cmd_parts);
 
   bee_message(bt('Running: @cmd', array('@cmd' => $cmd)), 'log');
