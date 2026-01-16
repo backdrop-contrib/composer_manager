@@ -86,6 +86,10 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
   composer_manager_register_autoloader();
 
   if ($force_refresh || !$vulnerabilities = composer_manager_sa_cache($lock_file)) {
+    if (class_exists('Enlightn\SecurityChecker\SecurityChecker') === FALSE) {
+      backdrop_set_message(t('The Security Checker library is not available. Please run "drush composer-manager install" to install the required dependencies.'), 'error');
+      return [];
+    }
     $checker = new SecurityChecker();
     $vulnerabilities = &backdrop_static('composer_manager_sa_cache');
     $vulnerabilities = $checker->check(backdrop_realpath($lock_file));
