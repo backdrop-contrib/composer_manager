@@ -372,7 +372,7 @@ function composer_manager_relative_json_property(&$value, array $options = array
   }
 
   // If there still is no valid "to", attempt with just using the value.
-  if (!$absolute) {
+  if (!$absolute && !empty($value)) {
     $absolute = backdrop_realpath($value);
   }
 

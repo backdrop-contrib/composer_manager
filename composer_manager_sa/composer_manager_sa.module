@@ -85,7 +85,11 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
   // update the Composer autoloader may not be registered.
   composer_manager_register_autoloader();
 
-  if ($force_refresh || (!empty($lock_file) && !$vulnerabilities = composer_manager_sa_cache($lock_file))) {
+  if ($force_refresh || (!empty($lock_file) && !$vulnerabilities = composer_manager_sa_cache($lock_file)) {
+    if (class_exists('Enlightn\SecurityChecker\SecurityChecker') === FALSE) {
+      backdrop_set_message(t('The Security Checker library is not available. Please run "bee composer-manager install" to install the required dependencies.'), 'error');
+      return [];
+    }
     $checker = new SecurityChecker();
     $vulnerabilities = &backdrop_static('composer_manager_sa_cache');
     $vulnerabilities = $checker->check(backdrop_realpath($lock_file));
@@ -131,12 +135,9 @@ function composer_manager_sa_cache($lock_file) {
  *   The URI to the composer.lock file.
  *
  * @return string
- *   The cache ID, or an empty string if the lock file does not exist.
+ *   The cache ID, or an empty string if the lock file is empty.
  */
-function composer_manager_sa_cache_cid($lock_file) {
-  if (!file_exists($lock_file)) {
-    return '';
-  }
-  $cid = md5(file_get_contents($lock_file));
+function composer_manager_sa_cache_cid(string $lock_file = '') {
+  $cid = (!empty($lock_file) && file_exists($lock_file)) ? md5(file_get_contents($lock_file)) : '';
   return $cid;
 }
