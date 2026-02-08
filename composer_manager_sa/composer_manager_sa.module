@@ -83,7 +83,7 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
   // update the Composer autoloader may not be registered.
   composer_manager_register_autoloader();
 
-  if ($force_refresh || !$vulnerabilities = composer_manager_sa_cache($lock_file))) {
+  if ($force_refresh || (!empty($lock_file) && !$vulnerabilities = composer_manager_sa_cache($lock_file))) {
     $vulnerabilities = &backdrop_static('composer_manager_sa_cache');
     if (!file_exists($lock_file)) {
       backdrop_set_message(t('The composer.lock file could not be found at @path.', ['@path' => $lock_file]), 'error');
@@ -109,15 +109,53 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
         foreach ($packages as $package) {
           if (isset($data['advisories'][$package['name']])) {
             foreach ($data['advisories'][$package['name']] as $advisory) {
-              // Check if the installed version is affected.
-              if (version_compare($package['version'], trim(explode(',', $advisory['affectedVersions'])[0], '<>='), '>=') &&
-                  version_compare($package['version'], trim(explode(',', $advisory['affectedVersions'])[1], '<>='), '<')) {
-                $vulnerabilities[$package['name']]['version'] = $package['version'];
-                $vulnerabilities[$package['name']]['advisories'][] = [
-                  'cve' => $advisory['cve'] ?: $advisory['advisoryId'],
-                  'title' => $advisory['title'],
-                  'link' => $advisory['link'],
-                ];
+              // Check if the installed version is affected. The equal sign may
+              // be implicit, so we have to check for that last -- if there is
+              // no operator, we will treat it as an equality check.
+              $comparison_operators = [
+                '<=',
+                '>=',
+                '<',
+                '>',
+                '=',
+              ];
+              $version_ranges = explode('|', $advisory['affectedVersions']);
+              foreach ($version_ranges as $version_range) {
+                $package_is_affected = FALSE;
+                $versions_affected = explode(',', $version_range);
+                foreach ($versions_affected as $version_constraint) {
+                  // Set to true as we go through the constraints within a
+                  // particular range if the version is affected by any of them.
+                  // If the version is still marked as affected after checking
+                  // the entire range, we can stop processing the rest of the
+                  // ranges for this advisory.
+                  foreach ($comparison_operators as $operator) {
+                    if (strpos($version_constraint, $operator) === 0) {
+                      $version_constraint = trim($version_constraint, '<>=');
+                      break;
+                    }
+                  }
+                  if (version_compare($package['version'], $version_constraint, $operator)) {
+                    $package_is_affected = TRUE;
+                  }
+                  else {
+                    // If the package is outside of a version constraint within
+                    // a particular range, it is not affected by the advisory,
+                    // even if it is within other constraints in the same
+                    // version range.
+                    $package_is_affected = FALSE;
+                    break;
+                  }
+                }
+                if ($package_is_affected) {
+                  $vulnerabilities[$package['name']]['version'] = $package['version'];
+                  $vulnerabilities[$package['name']]['advisories'][] = [
+                    'cve' => $advisory['cve'] ?: $advisory['advisoryId'],
+                    'title' => $advisory['title'],
+                    'link' => $advisory['link'],
+                  ];
+                  break;
+                }
               }
             }
           }
