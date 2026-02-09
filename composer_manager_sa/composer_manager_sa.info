@@ -3,7 +3,7 @@ description = Check for known security issues in Composer libraries from Friends
 package = Other
 backdrop = 1.x
 type = module
-php = 8.2
+php = 7.4
 
 dependencies[] = composer_manager
 

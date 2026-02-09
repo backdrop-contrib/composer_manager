@@ -14,7 +14,7 @@ function composer_manager_sa_drush_command() {
   $items['composer-manager-sa-check'] = array(
     'description' => 'Check for security advisories for installed Composer packages.',
     'aliases' => array('composer-sa'),
-    'drupal dependencies' => array('composer_manager_sa'),
+    'backdrop dependencies' => array('composer_manager_sa'),
   );
 
   return $items;
