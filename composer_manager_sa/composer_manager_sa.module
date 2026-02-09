@@ -135,7 +135,8 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
                       break;
                     }
                   }
-                  if (version_compare($package['version'], $version_constraint, $operator)) {
+                  $package_version = ltrim($package['version'], 'v');
+                  if (version_compare($package_version, $version_constraint, $operator)) {
                     $package_is_affected = TRUE;
                   }
                   else {
