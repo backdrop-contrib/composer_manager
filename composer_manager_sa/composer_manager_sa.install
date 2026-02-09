@@ -16,11 +16,11 @@ function composer_manager_sa_requirements($phase) {
 
     $lock_file = composer_manager_lock_file();
     $vulnerabilities = composer_manager_sa_cache($lock_file);
-    if (is_array($vulnerabilities) && empty($vulnerabilities)) {
+    if (empty($vulnerabilities)) {
       $severity = REQUIREMENT_OK;
       $description = $t('There are no known security issues with Composer libraries.');
     }
-    elseif ($vulnerabilities === NULL) {
+    elseif (!empty($vulnerabilities['no_data_in_cache'])) {
       $severity = REQUIREMENT_WARNING;
       $description = $t('Composer security check is waiting to run on cron.');
     }
