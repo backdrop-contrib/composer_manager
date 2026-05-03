@@ -6,6 +6,8 @@
  * required by contributed modules.
  */
 
+include_once BACKDROP_ROOT . '/core/includes/common.inc';
+
 /**
  * Implements hook_config_info().
  */
