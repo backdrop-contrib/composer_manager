@@ -86,11 +86,11 @@ function composer_manager_sa_formatted($lock_file, array $vulnerabilities) {
 function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE) {
   // 'drush composer-manager' doesn't run a full bootstrap, so on install and
   // update the Composer autoloader may not be registered.
-try {
-  composer_manager_register_autoloader();
-} catch(\Exception $e) {
-  backdrop_set_message(t('Run composer update to create a composer autoload.php file.'), 'error');
-}  
+  try {
+    composer_manager_register_autoloader();
+  } catch (\Exception $e) {
+    backdrop_set_message(t('Run composer update to create a composer autoload.php file.'), 'error');
+  }
 
   if (empty($lock_file)) {
     return [
