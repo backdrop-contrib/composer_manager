@@ -54,7 +54,12 @@ function composer_manager_sa_formatted($lock_file, array $vulnerabilities) {
   foreach ($vulnerabilities as $library => $vulnerability) {
     $output .= '<li><code>' . $library . '</code>: ';
     foreach ($vulnerability['advisories'] as $advisory) {
-      $output .= l($advisory['cve'], $advisory['link'], array('attributes' => array('target' => '_blank')));
+      if (!empty($advisory['link'])) {
+        $output .= l($advisory['cve'], $advisory['link'], array('attributes' => array('target' => '_blank')));
+      }
+      else {
+        $output .= $advisory['cve'] ?? '';
+      }
       $output .= ' (' . $advisory['title'] . ') ';
     }
     $output .= '</li>';
@@ -81,14 +86,29 @@ function composer_manager_sa_formatted($lock_file, array $vulnerabilities) {
 function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE) {
   // 'drush composer-manager' doesn't run a full bootstrap, so on install and
   // update the Composer autoloader may not be registered.
-  composer_manager_register_autoloader();
+  try {
+    composer_manager_register_autoloader();
+  } catch (\Exception $e) {
+    backdrop_set_message(t('Run composer update to create a composer autoload.php file.'), 'error');
+  }
 
-  if ($force_refresh || (!empty($lock_file) && !$vulnerabilities = composer_manager_sa_cache($lock_file))) {
+  if (empty($lock_file)) {
+    return [
+      'composer_manager' => [
+        'version' => 'N/A',
+        'advisories' => [
+          [
+            'cve' => 'no_lock_file',
+            'title' => t('The composer.lock file could not be found.'),
+            'link' => '',
+          ],
+        ],
+      ],
+    ];
+  }
+  $vulnerabilities = composer_manager_sa_cache($lock_file);
+  if ($force_refresh || !empty($vulnerabilities['no_data_in_cache'])) {
     $vulnerabilities = &backdrop_static('composer_manager_sa_cache');
-    if (!file_exists($lock_file)) {
-      backdrop_set_message(t('The composer.lock file could not be found at @path.', ['@path' => $lock_file]), 'error');
-      return [];
-    }
     $lock_data = json_decode(file_get_contents($lock_file), TRUE);
     // @todo: Consider checking dev dependencies as well, but this may require
     // a more complex UI to allow users to ignore advisories for dev
@@ -175,8 +195,10 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
  * @param string $lock_file
  *   The URI to the composer.lock file.
  *
- * @return array|NULL
- *   The array of cached vulnerabilities, or FALSE if no data is in the cache.
+ * @return array
+ *   The array of cached vulnerabilities. The array will be empty if no
+ *   vulnerabilities were found, and if there was no data in the cache the
+ *   array will contain a 'no_data_in_cache' key.
  */
 function composer_manager_sa_cache($lock_file) {
   $vulnerabilities = &backdrop_static(__FUNCTION__);
@@ -188,14 +210,17 @@ function composer_manager_sa_cache($lock_file) {
   }
 
   if (empty($lock_file)) {
-    return FALSE;
+    // If there is no lock file, this function returns an error message to
+    // indicate the problem. This is not something that should be cached, so we
+    // return it directly.
+    return composer_manager_sa_vulnerabilities($lock_file);
   }
   $cid = composer_manager_sa_cache_cid($lock_file);
   if ($cached = cache_get($cid)) {
     $vulnerabilities = $cached->data;
   }
 
-  return $vulnerabilities;
+  return $vulnerabilities ?? ['no_data_in_cache' => TRUE];
 }
 
 /**
