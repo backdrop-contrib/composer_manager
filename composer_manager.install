@@ -11,7 +11,7 @@
 function composer_manager_install() {
   $config = config('composer_manager.settings');
   $config->set('vendor_dir', backdrop_realpath($config->get('vendor_dir')));
-  $config->set('composer_dir', backdrop_realpath($config->get('composer_dir')));
+  $config->set('file_dir', backdrop_realpath($config->get('file_dir')));
   $config->save();
 }
 
