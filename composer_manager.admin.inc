@@ -82,7 +82,7 @@ function composer_manager_packages_page() {
     $dependents = composer_manager_package_dependents();
     $combined = array_unique(array_merge(array_keys($required), array_keys($installed)));
     $lock_file = composer_manager_lock_file();
-    $vulnerabilities = (module_exists('composer_manager_sa')) ? composer_manager_sa_check($lock_file) : array();
+    $vulnerabilities_formatted = (module_exists('composer_manager_sa')) ? composer_manager_sa_check($lock_file) : array();
   }
   catch (\RuntimeException $e) {
     $error = TRUE;
@@ -227,12 +227,12 @@ function composer_manager_packages_page() {
   if ($has_conflicts) {
     backdrop_set_message(t('Potentially conflicting versions of the same package are required by different modules.'), 'warning');
   }
-  if (!empty($vulnerabilities)) {
+  if (!empty($vulnerabilities_formatted)) {
     if (!empty($lock_file)) {
-      backdrop_set_message(t('Security advisories have been published for some of the packages managed by Composer.' . $vulnerabilities), 'error');
+      backdrop_set_message(t('Security advisories have been published for some of the packages managed by Composer.' . $vulnerabilities_formatted), 'error');
     }
     else {
-      backdrop_set_message(t('Security advisories have not been checked.' . $vulnerabilities), 'error');
+      backdrop_set_message(t('Security advisories have not been checked.' . $vulnerabilities_formatted), 'error');
     }
 
   }

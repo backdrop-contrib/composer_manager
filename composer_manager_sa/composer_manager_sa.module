@@ -106,9 +106,9 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
       ],
     ];
   }
-  $vulnerabilities = composer_manager_sa_cache($lock_file);
+  $vulnerabilities = composer_manager_sa_get_cache($lock_file);
   if ($force_refresh || !empty($vulnerabilities['no_data_in_cache'])) {
-    $vulnerabilities = &backdrop_static('composer_manager_sa_cache');
+    $vulnerabilities_static = &backdrop_static('composer_manager_sa_get_cache');
     $lock_data = json_decode(file_get_contents($lock_file), TRUE);
     // @todo: Consider checking dev dependencies as well, but this may require
     // a more complex UI to allow users to ignore advisories for dev
@@ -116,13 +116,19 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
     // $packages = array_merge($lock_data['packages'], $lock_data['packages-dev']);
     $packages = $lock_data['packages'];
     $package_names = [];
+    $query = '';
+    $prefix = 'packages[]=';
+    $connector = '';
     foreach ($packages as $package) {
-      $package_names[] = $package['name'];
+      if (!empty($package['name'])) {
+        $package_names[] = $package['name'];
+        $query .= $connector . $prefix . $package['name'];
+        $connector = '&';
+      }
     }
     // Retrieve and check the Packagist.org API security advisories.
     $vulnerabilities = [];
     if (!empty($package_names)) {
-      $query = http_build_query(['packages' => $package_names], '', '&', PHP_QUERY_RFC3986);
       $response = backdrop_http_request('https://packagist.org/api/security-advisories/?' . $query);
       if ($response->code == 200) {
         $data = json_decode($response->data, TRUE);
@@ -183,9 +189,13 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
         }
       }
     }
-    cache_set(composer_manager_sa_cache_cid($lock_file), $vulnerabilities, 'cache', 3600);
+    $cid = composer_manager_sa_cache_cid($lock_file);
+    $expire = REQUEST_TIME + 3600;
+    cache_set($cid, $vulnerabilities, 'cache', $expire);
+    if (!empty($vulnerabilities)) {
+      $vulnerabilities_static = $vulnerabilities;
+    }
   }
-
   return $vulnerabilities;
 }
 
@@ -200,7 +210,7 @@ function composer_manager_sa_vulnerabilities($lock_file, $force_refresh = FALSE)
  *   vulnerabilities were found, and if there was no data in the cache the
  *   array will contain a 'no_data_in_cache' key.
  */
-function composer_manager_sa_cache($lock_file) {
+function composer_manager_sa_get_cache($lock_file) {
   $vulnerabilities = &backdrop_static(__FUNCTION__);
 
   // If there are no vulnerabilities this is an empty array, so we have to use
@@ -219,7 +229,6 @@ function composer_manager_sa_cache($lock_file) {
   if ($cached = cache_get($cid)) {
     $vulnerabilities = $cached->data;
   }
-
   return $vulnerabilities ?? ['no_data_in_cache' => TRUE];
 }
 
@@ -233,6 +242,7 @@ function composer_manager_sa_cache($lock_file) {
  *   The cache ID, or an empty string if the lock file is empty.
  */
 function composer_manager_sa_cache_cid(string $lock_file = '') {
-  $cid = (!empty($lock_file) && file_exists($lock_file)) ? md5(file_get_contents($lock_file)) : '';
+  $prefix = 'composer_manager_sa:';
+  $cid = (!empty($lock_file) && file_exists($lock_file)) ? $prefix . md5(file_get_contents($lock_file)) : '';
   return $cid;
 }
