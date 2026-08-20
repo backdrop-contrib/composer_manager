@@ -98,10 +98,16 @@ function composer_manager_build_json(array $data) {
           // Only support the following "extra" properties.
           // Installers (https://github.com/composer/installers).
           array('extra', 'installer-paths'),
-
           // Patches (https://github.com/cweagans/composer-patches).
           array('extra', 'patches'),
           array('extra', 'patches-ignore'),
+          array('extra', 'patches-file'),
+
+          // Scripts (https://getcomposer.org/doc/articles/scripts.md).
+          array('scripts', 'pre-install-cmd'),
+          array('scripts', 'post-install-cmd'),
+          array('scripts', 'pre-update-cmd'),
+          array('scripts', 'post-update-cmd'),
         ),
         'relative_paths' => array(
           'keys' => array(
@@ -112,6 +118,7 @@ function composer_manager_build_json(array $data) {
             'autoload-dev',
             array('extra', 'patches'),
             array('extra', 'patches-ignore'),
+            array('extra', 'patches-file'),
           ),
         ),
       );
@@ -439,7 +446,7 @@ function composer_manager_relative_dir($dir_to, $dir_from) {
   }
 
   $path = str_repeat('../', count($dirs_from)) . join('/', $dirs_to);
-  if (PHP_OS == 'WINNT'){
+  if (PHP_OS == 'WINNT') {
     $path = preg_replace('%..\\/([a-zA-Z])%i', '${1}', $path, 1);
   }
   return $path;
