@@ -81,10 +81,12 @@ function composer_manager_build_json(array $data) {
         ),
       );
 
+      // "require-dev" and "autoload-dev" are left out: Composer only honors
+      // them in the root package, so a module's development dependencies
+      // (e.g. coding standards tools) must not be installed on the site.
       $json_map = array(
         'properties' => array(
           'autoload',
-          'autoload-dev',
           'config',
           'conflict',
           'provide',
@@ -92,7 +94,6 @@ function composer_manager_build_json(array $data) {
           'replace',
           'repositories',
           'require',
-          'require-dev',
           'suggest',
 
           // Only support the following "extra" properties.
